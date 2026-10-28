@@ -1,0 +1,255 @@
+;导入模型
+model new
+zone import 'Flacmodel_haitang.Flac3D'
+
+;导入摩尔库伦
+zone cmodel assign mohr-coulomb
+
+;大变形打开
+model large-strain on
+zone gridpoint merge
+
+;添加重力
+model gravity 0 0 -10
+;固定边界
+zone gridpoint fix velocity-z range position-z -0.01 0.01
+zone gridpoint fix velocity-x range position-x -17.99  -18.01
+zone gridpoint fix velocity-x range position-x 17.99  18.01
+zone gridpoint fix velocity-y range position-y -0.01 0.01
+zone gridpoint fix velocity-y range position-y 17.99 18.01
+
+;添加摩尔库伦
+zone cmodel assign mohr-coulomb
+;参数 bulk体积模量shear剪切模量friction内摩擦角cohesion粘聚力tension抗拉强度density密度
+zone property bulk 1.54e9 shear 0.428e9 friction 25 cohesion 1.5e5 tension 1e5 density 1900 range group 'Default=1'
+zone property bulk 1.54e9 shear 0.428e9 friction 25 cohesion 1.5e5 tension 1e5 density 1900 range group 'Default=2'
+zone property bulk 1.54e9 shear 0.428e9 friction 25 cohesion 1.5e5 tension 1e5 density 1900 range group 'Default=3'
+zone property bulk 1.54e9 shear 0.428e9 friction 25 cohesion 1.5e5 tension 1e5 density 1900 range group 'Default=4'
+zone property bulk 1.54e9 shear 0.428e9 friction 25 cohesion 1.5e5 tension 1e5 density 1900 range group 'Default=5'
+zone property bulk 1.54e9 shear 0.428e9 friction 25 cohesion 1.5e5 tension 1e5 density 1900 range group 'Default=6'
+
+model history mechanical unbalanced-maximum
+
+model solve ratio-local  1e-03
+model save 'zizhong.sav'
+
+
+zone gridpoint initialize displacement-x 0
+zone gridpoint initialize displacement-y 0
+zone gridpoint initialize displacement-z 0
+
+
+;开挖
+zone cmodel assign null range group 'Default=1'
+zone cmodel assign null range group 'Default=2'
+zone cmodel assign null range group 'Default=3'
+zone cmodel assign null range group 'Default=4'
+;zone cmodel assign null range group 'Default=5'
+model cycle 1000
+
+;初支c30
+zone cmodel assign mohr-coulomb range group 'Default=4'
+zone property bulk 1.54e9 shear 0.428e9 friction 25 cohesion 1.5e5 tension 1e5 density 1900 dilation 3 range group 'Default=4'
+;zone property bulk 1.667e10 shear 1.25e10  density 2300 range group 'Default=4'
+
+model solve ratio-local  1e-04
+model save 'chuzhi.sav'
+
+;橡胶
+zone cmodel assign elastic range group 'Default=3'
+zone property bulk 1e6 shear 1e5  density 75.2 range group 'Default=3'
+
+model solve ratio-local  1e-03
+model save 'EVApaomian.sav'
+
+;二衬c30
+zone cmodel assign mohr-coulomb range group 'Default=2'
+zone property bulk 1.54e9 shear 0.428e9 friction 25 cohesion 1.5e5 tension 1e5 density 1900 dilation 3 range group 'Default=2'
+;zone property bulk 1.667e10 shear 1.25e10  density 2500 range group 'Default=2'
+;zone cmodel assign mohr-coulomb range group 'Default=2'
+;zone property bulk 1.54e9 shear 0.428e9 friction 25 cohesion 1.5e5 tension 1e5 density 1900 dilation 3 range group 'Default=2'
+;zone property bulk 1.667e10 shear 1.25e10  density 2500 range group 'Default=2'
+
+model solve ratio-local  1e-4
+model save 'erchen.sav'
+
+;model configure thermal
+;model thermal active on
+model deterministic on
+model large-strain off
+;添加热
+;zone thermal cmodel assign isotropic range group 'Default=2'
+;zone thermal cmodel assign isotropic range group 'Default=3'
+;zone thermal cmodel assign isotropic range group 'Default=4'
+;zone thermal cmodel assign isotropic range group 'Default=5'
+;zone thermal cmodel assign isotropic range group 'Default=6'
+;C30
+;zone thermal property conductivity 2.0 specific-heat 950 expansion 1.1e-5 range group 'Default=5'
+;橡胶
+;zone thermal property conductivity 0.2 specific-heat 2000 expansion 2.5e-4 range group 'Default=4'
+;C30
+;zone thermal property conductivity 2.5 specific-heat 900 expansion 1.0e-5 range group 'Default=3'
+;zone thermal property conductivity 0.3 specific-heat 1500 expansion 1.0e-5 range group 'Default=2'
+;断层
+;zone thermal property conductivity 2.0 specific-heat 900 expansion 1.8e-5 range group 'Default=6'
+
+
+;zone gridpoint initialize temperature 15 
+;温度边界
+;zone gridpoint fix temperature 77 range group 'Default=6' position-z -0.1 0.1 
+;zone apply source 10 range group 'Default=6' position-z  0  2    ; 底部热源
+
+;提取外表面
+;zone face skin range group 'Default=2'
+;在表皮面组上施加流量
+;zone  face apply flux  -2 range group "Top50" 
+;zone  face apply flux  -2 range group "Top49" 
+;稳态热传导求解
+;model solve thermal ratio  1e-6
+;model save 'thermal_steady'
+
+;热应力耦合
+;zone gridpoint initialize displacement (0,0,0)
+;model mechanical thermal active on  ; 激活热膨胀效应
+;model solve mechanical ratio 1e-4
+;model save 'thermal_stress'
+  
+;开变形开动力
+model config dynamic
+model dynamic active on
+model large-strain on
+program thread 8
+zone gridpoint merge
+
+;速度
+zone dynamic multi-step on
+zone gridpoint initialize velocity-x 0
+zone gridpoint initialize velocity-y 0
+zone gridpoint initialize velocity-z 0
+;位移
+zone gridpoint initialize displacement-x 0
+zone gridpoint initialize displacement-y 0
+zone gridpoint initialize displacement-z 0
+
+
+zone gridpoint free velocity-x range position-z  -0.01 0.01
+zone gridpoint free velocity-y range position-z  -0.01 0.01
+zone gridpoint free velocity-z range position-z  -0.01 0.01
+zone face apply quiet-normal range position-z  -0.01 0.01
+zone face apply quiet-strike range position-z  -0.01 0.01
+zone face apply quiet-dip range position-z  -0.01 0.01
+
+zone dynamic free-field on
+
+table '1' import 'yacc0.6g.txt'
+zone face apply acceleration-x 1.5 table '1' range position-z  -0.01 0.01
+
+
+history delete
+zone dynamic damping local 0.157;阻尼
+history interval 100;计算次保存
+model dynamic timestep fix 1e-5  ; 0.00001秒/步
+model history dynamic time-total
+
+
+;监测点
+;gongding31
+;erchen
+zone history name '30' stress-xy position (0,25,28.65);nei
+zone history name '31' stress-xx position (0,25,28.65)
+zone history name '32' stress-yy position (0,25,28.65)
+zone history name '33' stress-xy position (0,25,28.78);wai
+zone history name '34' stress-xx position (0,25,28.78)
+zone history name '35' stress-yy position (0,25,28.78)
+
+;32
+
+zone history name '40' stress-xy position (6.78,25,22.56)
+zone history name '41' stress-xx position (6.78,25,22.56)
+zone history name '42' stress-yy position (6.78,25,22.56)
+zone history name '43' stress-xy position (6.90,25,22.56)
+zone history name '44' stress-xx position (6.90,25,22.56)
+zone history name '45' stress-yy position (6.90,25,22.56)
+
+;33
+zone history name '50' stress-xy position (0,25,17.13)
+zone history name '51' stress-xx position (0,25,17.13)
+zone history name '52' stress-yy position (0,25,17.13)
+zone history name '53' stress-xy position (0,25,16.93)
+zone history name '54' stress-xx position (0,25,16.93)
+zone history name '55' stress-yy position (0,25,16.93)
+
+;34
+zone history name '60' stress-xy position (-6.78,25,22.56)
+zone history name '61' stress-xx position (-6.78,25,22.56)
+zone history name '62' stress-yy position (-6.78,25,22.56)
+zone history name '63' stress-xy position (-6.90,25,22.56)
+zone history name '64' stress-xx position (-6.90,25,22.56)
+zone history name '65' stress-yy position (-6.90,25,22.56)
+
+
+;weiyi
+;31
+zone history name '230' displacement-x position (0,25,28.65)
+zone history name '231' displacement-z position (0,25,28.65)
+;32
+zone history name '240' displacement-x position (6.78,25,22.56)
+zone history name '241' displacement-z position (6.78,25,22.56)
+;33
+zone history name '250' displacement-x position (0,25,17.13)
+zone history name '251' displacement-z position (0,25,17.13)
+;34
+zone history name '260' displacement-x position (-6.78,25,22.56)
+zone history name '261' displacement-z position (-6.78,25,22.56)
+
+model solve time-total 14.98
+model save 'earthquake'
+
+;导出
+
+history export 30 file '30.txt'
+history export 31 file '31.txt'
+history export 32 file '32.txt'
+history export 33 file '33.txt'
+history export 34 file '34.txt'
+history export 35 file '35.txt'
+
+history export 40 file '40.txt'
+history export 41 file '41.txt'
+history export 42 file '42.txt'
+history export 43 file '43.txt'
+history export 44 file '44.txt'
+history export 45 file '45.txt'
+
+history export 50 file '50.txt'
+history export 51 file '51.txt'
+history export 52 file '52.txt'
+history export 53 file '53.txt'
+history export 54 file '54.txt'
+history export 55 file '55.txt'
+
+history export 60 file '60.txt'
+history export 61 file '61.txt'
+history export 62 file '62.txt'
+history export 63 file '63.txt'
+history export 64 file '64.txt'
+history export 65 file '65.txt'
+
+
+history export 230 file '230.txt'
+history export 231 file '231.txt'
+history export 240 file '240.txt'
+history export 241 file '241.txt'
+history export 250 file '250.txt'
+history export 251 file '251.txt'
+history export 260 file '260.txt'
+history export 261 file '261.txt'
+
+
+
+
+
+
+
+
+
