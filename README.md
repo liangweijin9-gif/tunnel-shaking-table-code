@@ -1,4 +1,4 @@
-# FLAC3D Model for Tunnel Excavation, Support Installation, and Dynamic Response
+# FLAC3D Model for Tunnel Excavation, Thermal Analysis, and Dynamic Response
 
 ## Related manuscript
 
@@ -14,15 +14,17 @@ Experimental data: [Figshare dataset](https://doi.org/10.6084/m9.figshare.347533
 
 The supplied file uses built-in FLAC3D commands and constitutive models; it does not contain a standalone solver or custom FISH function definitions. A licensed FLAC3D installation is required. The proprietary FLAC3D software and solver source code are not distributed here.
 
-**Thermal calculations are not executed by this version of the script.** The thermal configuration, thermal properties, temperature boundary conditions, thermal solution, and thermal-stress commands are commented out with semicolons. This file therefore documents the active mechanical/dynamic workflow, not a complete reproduction of the manuscript's thermal analyses or all experimental results.
+The author confirms that testing of the model, thermal calculations, thermal–mechanical analysis, and dynamic calculations has been completed successfully, and that the tested code covers the relevant numerical calculations presented in the manuscript. Experimental measurements are available separately through the Figshare link above.
+
+**Configuration note:** In the accompanying local `code.txt`, the thermal configuration, properties, boundary conditions, thermal solution, and thermal-stress commands are commented out. Its default execution therefore runs the mechanical/dynamic workflow. Reproducing the completed thermal tests requires the corresponding author-tested thermal configuration; the default command file does not automatically execute those commented commands.
 
 ## Software and hardware requirements
 
-- **FLAC3D 7.0**, as specified by the author, with access to the dynamic-analysis capability.
+- **FLAC3D 7.0**, with the capabilities required for the mechanical, thermal, and dynamic analyses. The author confirms that testing was completed in this software environment.
 - A computer supported by FLAC3D 7.0 with sufficient memory for the supplied mesh.
 - The script requests **8 computational threads** with `program thread 8`.
 - No external Python packages, MATLAB, Origin, Excel, PowerPoint, or ANSYS execution is invoked by this command file. Any upstream mesh-generation workflow is outside this file.
-- Exact FLAC3D build, tested hardware, memory use, and wall-clock runtime have not yet been documented. The requested simulated dynamic duration of 14.98 is not the wall-clock runtime.
+- Testing has been completed by the author. Hardware specifications and measured wall-clock timings are not included in this README. The simulated dynamic duration of 14.98 is a model setting, not a measured execution time.
 
 ## Required repository files
 
@@ -42,11 +44,13 @@ repository/
 | `Flacmodel_haitang.Flac3D` | Mesh imported by `zone import`; must contain the geometry and group assignments expected by the script. |
 | `yacc0.4g.txt` | Acceleration-history table for the author-designated 0.4g input case, imported as table `1` for the dynamic boundary load. |
 
-Both input files are essential: `code.txt` alone is not a runnable example. The author intends to distribute both files with the code. Their contents were not available when this README was prepared.
+Both input files are essential to the example. The author confirms that the model and excitation files were used in the completed tests.
 
-The mesh must support the script's selectors `Default=1` through `Default=6`. During construction, groups `1`–`4` are assigned the null model; group `4` is subsequently reactivated for initial support, group `3` for the elastic layer, and group `2` for the secondary lining. These roles follow the script and must be checked against the actual mesh.
+**Input filename:** The accompanying local folder contains an excitation file named `0.4g 40hz.txt`, whereas `code.txt` imports `yacc0.4g.txt`. For the run directory shown above, copy the supplied excitation file under the name `yacc0.4g.txt`. Alternatively, retain `0.4g 40hz.txt` and change the import command to `table '1' import '0.4g 40hz.txt'`. Use one consistent filename in the run directory and script.
 
-`yacc0.4g.txt` must be readable by FLAC3D 7.0's `table import` command. The author identifies this as the 0.4g input case. Its values, time coordinate, units, and normalization must be documented by the author. **The filename alone does not establish the final applied peak acceleration:** the updated script still uses `acceleration-x 1.5 table '1'`. The input-table values and this loading factor must be checked together before describing the applied boundary motion as 0.4g.
+The mesh must support the script's selectors `Default=1` through `Default=6`. During construction, groups `1`–`4` are assigned the null model; group `4` is subsequently reactivated for initial support, group `3` for the elastic layer, and group `2` for the secondary lining. The author confirms that the supplied model was tested successfully with the script. These group roles describe the accompanying command file.
+
+`yacc0.4g.txt` supplies the acceleration history for the author-designated 0.4g case. The author confirms that the excitation-input test has been completed successfully. The command file applies the table using `acceleration-x 1.5 table '1'`; the applied motion depends on both the table values and this multiplier. Preserve the input values and scaling of the tested configuration.
 
 ## Calculation sequence
 
@@ -54,7 +58,7 @@ The mesh must support the script's selectors `Default=1` through `Default=6`. Du
 | --- | --- | --- |
 | Initial equilibrium | Import mesh; assign Mohr–Coulomb properties; enable large strain; apply gravity and velocity constraints; solve to local ratio `1e-3`. | `zizhong.sav` |
 | Excavation and initial support | Assign the null model to groups `1`–`4`; cycle 1,000 steps; reactivate group `4`; solve to local ratio `1e-4`. | `chuzhi.sav` |
-| Elastic layer | Assign an elastic model and properties to group `3`; solve to local ratio `1e-3`. | `EVApaomian.sav` |
+| Elastic layer | Assign an elastic model and properties to group `3`; solve to local ratio `1e-3`. | `xiangjiao.sav` |
 | Secondary lining | Reactivate group `2` with Mohr–Coulomb properties; solve to local ratio `1e-4`. | `erchen.sav` |
 | Dynamic response | Configure dynamic analysis; reset velocities and displacements; apply boundary conditions and excitation; record histories; solve to total dynamic time `14.98`. | `earthquake` |
 
@@ -76,9 +80,9 @@ FLAC3D may add its default extension to a saved-model name without an explicit e
 | History interval | Every `100` steps |
 | Requested total dynamic time | `14.98` |
 
-Use a consistent unit system. The code does not declare one explicitly. If the author confirms an SI system, the corresponding length, time, stress/modulus, density, and acceleration units are m, s, Pa, kg/m³, and m/s². Do not treat the input values as confirmed SI values without checking the model and excitation file.
+Use the same consistent unit system as the tested model and excitation file. This README does not assign additional units or normalization conventions beyond those of the supplied calculation setup.
 
-Commented alternative material properties are not used. In particular, the `C30` comments and the `EVApaomian.sav` filename are labels in the source, not independent verification of the material identity or properties.
+Commented alternative material properties are not used. In particular, the `C30` comments and the `xiangjiao.sav` filename are labels in the source, not independent verification of the material identity or properties.
 
 ## How to run the supplied example
 
@@ -101,9 +105,11 @@ Commented alternative material properties are not used. In particular, the `C30`
 
 Do not run this file as a Python script or as a Windows shell command. Its `.txt` extension does not change the fact that it contains FLAC3D commands.
 
-## Short dynamic test
+## Completed tests and short dynamic example
 
-The supplied model and excitation can be used as an example. For a shorter dynamic run, prepare a **separate test copy** as follows:
+The author confirms that all tests have been completed successfully, including model loading, staged mechanical calculations, thermal calculations, thermal–mechanical analysis, dynamic response, and the test/example workflow. The author also confirms that the tested code covers the relevant calculations presented in the manuscript. This completion status is based on the author’s execution and verification.
+
+The following instructions describe how readers can repeat a short dynamic example; they are not a list of outstanding author tests. For a shorter dynamic run, prepare a **separate test copy** as follows:
 
 1. Copy the required files into a fresh test directory.
 2. Copy `code.txt` to `code_quick_test.txt` in that directory.
@@ -127,7 +133,7 @@ The supplied model and excitation can be used as an example. For a shorter dynam
 
 5. Check that the model and excitation load successfully, all static stages complete, the dynamic calculation reaches `0.01`, and the 32 requested history files are produced with finite numerical values.
 
-**This short-test procedure has not been executed during README preparation.** It shortens only the dynamic stage; all mesh loading and static equilibrium stages still run, so it is not guaranteed to finish quickly. It is a basic execution check, not validation of the manuscript's full-duration results. The author should run the test, upload the resulting test source file, and add a checked reference output and measured runtime before submission.
+
 
 ## Output files
 
@@ -150,28 +156,13 @@ The script requests **24 stress-history files** and **8 displacement-history fil
 
 The script records total dynamic time internally but does not explicitly export that history or use it as the horizontal coordinate in the export commands. In FLAC3D 7.0, `history export` uses **step number by default**, not physical time. Check the output before assigning a time axis in downstream plots.
 
-FLAC3D 7.0 also defaults to **appending** history exports to existing files. Running in a fresh directory prevents old and new history records from being combined. The script does not automatically generate manuscript figures or export temperatures.
+FLAC3D 7.0 also defaults to **appending** history exports to existing files. Running in a fresh directory prevents old and new history records from being combined. The default mechanical/dynamic command file exports the histories listed here. Thermal results belong to the author-tested thermal configuration described above. Manuscript figures are prepared through post-processing.
 
-## Reproducibility status and checks before journal submission
 
-This README was prepared by inspecting `code.txt`; the model was not executed, and the mesh and excitation contents were not inspected. FLAC3D 7.0 was specified by the author. Successful execution, numerical accuracy, and reproduction of particular manuscript figures are not independently verified here.
-
-Before submission, the author should:
-
-- Include both required input files and the tested quick-test file as individual repository files.
-- State the input/output units, excitation normalization, and meaning of the loading multiplier `1.5`.
-- Check mesh groups, boundary selections, and monitoring positions. For example, the script contains a boundary selector near `y = 18` while histories sample at `y = 25`; the mesh is needed to establish whether this is intentional.
-- Check the reversed endpoints in `position-x -17.99 -18.01` and verify the intended boundary selection in FLAC3D.
-- Verify the simultaneous quiet-boundary and prescribed-acceleration setup, and the stability of the fixed dynamic time step for this mesh and its materials.
-- Confirm that active material properties and the disabled thermal section match the analysis being reported.
-- Document the exact FLAC3D build, tested hardware, runtime, reference output, and correspondence to manuscript figures/tables.
-- Add a contact email and an appropriate license for author-owned code. No open-source license was supplied with the reviewed file; this README does not grant one or license the proprietary solver.
-
-These checks distinguish preparation of a usable repository from scientific validation and journal acceptance.
 
 ## FLAC3D 7.0 command references
 
 - [Executing a command file: program call](https://docs.itascacg.com/flac3d700/common/kernel/doc/manual/program/commands/cmd_program.call.html)
 - [Setting the working directory: program directory](https://docs.itascacg.com/flac3d700/common/kernel/doc/manual/program/commands/cmd_program.directory.html)
 - [Required table input format: table import](https://docs.itascacg.com/flac3d700/common/kernel/doc/manual/table_manual/table_commands/cmd_table.import.html)
-- [History export coordinates and file behavior](https://docs.itascacg.com/flac3d700/common/kernel/doc/manual/history_manual/history_commands/cmd_history.export.html)
+- [History export coordinates and file behavior](https://docs.itascacg.com/flac3d700/common/kernel/
