@@ -13,10 +13,10 @@ zone gridpoint merge
 model gravity 0 0 -10
 ;固定边界
 zone gridpoint fix velocity-z range position-z -0.01 0.01
-zone gridpoint fix velocity-x range position-x -17.99  -18.01
-zone gridpoint fix velocity-x range position-x 17.99  18.01
+zone gridpoint fix velocity-x range position-x -50.01  -49.99
+zone gridpoint fix velocity-x range position-x 49.99  50.01
 zone gridpoint fix velocity-y range position-y -0.01 0.01
-zone gridpoint fix velocity-y range position-y 17.99 18.01
+zone gridpoint fix velocity-y range position-y 49.99 50.01
 
 ;添加摩尔库伦
 zone cmodel assign mohr-coulomb
@@ -60,7 +60,7 @@ zone cmodel assign elastic range group 'Default=3'
 zone property bulk 1e6 shear 1e5  density 75.2 range group 'Default=3'
 
 model solve ratio-local  1e-03
-model save 'EVApaomian.sav'
+model save 'xiangjiao.sav'
 
 ;二衬c30
 zone cmodel assign mohr-coulomb range group 'Default=2'
@@ -73,46 +73,46 @@ zone property bulk 1.54e9 shear 0.428e9 friction 25 cohesion 1.5e5 tension 1e5 d
 model solve ratio-local  1e-4
 model save 'erchen.sav'
 
-;model configure thermal
-;model thermal active on
+model configure thermal
+model thermal active on
 model deterministic on
 model large-strain off
 ;添加热
-;zone thermal cmodel assign isotropic range group 'Default=2'
-;zone thermal cmodel assign isotropic range group 'Default=3'
-;zone thermal cmodel assign isotropic range group 'Default=4'
-;zone thermal cmodel assign isotropic range group 'Default=5'
-;zone thermal cmodel assign isotropic range group 'Default=6'
+zone thermal cmodel assign isotropic range group 'Default=2'
+zone thermal cmodel assign isotropic range group 'Default=3'
+zone thermal cmodel assign isotropic range group 'Default=4'
+zone thermal cmodel assign isotropic range group 'Default=5'
+zone thermal cmodel assign isotropic range group 'Default=6'
 ;C30
-;zone thermal property conductivity 2.0 specific-heat 950 expansion 1.1e-5 range group 'Default=5'
+zone thermal property conductivity 2.0 specific-heat 950 expansion 1.1e-5 range group 'Default=5'
 ;橡胶
-;zone thermal property conductivity 0.2 specific-heat 2000 expansion 2.5e-4 range group 'Default=4'
+zone thermal property conductivity 0.2 specific-heat 2000 expansion 2.5e-4 range group 'Default=4'
 ;C30
-;zone thermal property conductivity 2.5 specific-heat 900 expansion 1.0e-5 range group 'Default=3'
+zone thermal property conductivity 2.5 specific-heat 900 expansion 1.0e-5 range group 'Default=3'
 ;zone thermal property conductivity 0.3 specific-heat 1500 expansion 1.0e-5 range group 'Default=2'
 ;断层
-;zone thermal property conductivity 2.0 specific-heat 900 expansion 1.8e-5 range group 'Default=6'
+zone thermal property conductivity 2.0 specific-heat 900 expansion 1.8e-5 range group 'Default=6'
 
 
-;zone gridpoint initialize temperature 15 
-;温度边界
-;zone gridpoint fix temperature 77 range group 'Default=6' position-z -0.1 0.1 
-;zone apply source 10 range group 'Default=6' position-z  0  2    ; 底部热源
+zone gridpoint initialize temperature 15 
+温度边界
+zone gridpoint fix temperature 77 range group 'Default=6' position-z -0.1 0.1 
+zone apply source 10 range group 'Default=6' position-z  0  2    ; 底部热源
 
-;提取外表面
-;zone face skin range group 'Default=2'
-;在表皮面组上施加流量
-;zone  face apply flux  -2 range group "Top50" 
-;zone  face apply flux  -2 range group "Top49" 
-;稳态热传导求解
-;model solve thermal ratio  1e-6
-;model save 'thermal_steady'
+提取外表面
+zone face skin range group 'Default=2'
+在表皮面组上施加流量
+zone  face apply flux  -2 range group "Top50" 
+zone  face apply flux  -2 range group "Top49" 
+稳态热传导求解
+model solve thermal ratio  1e-6
+model save 'thermal_steady'
 
-;热应力耦合
-;zone gridpoint initialize displacement (0,0,0)
-;model mechanical thermal active on  ; 激活热膨胀效应
-;model solve mechanical ratio 1e-4
-;model save 'thermal_stress'
+热应力耦合
+zone gridpoint initialize displacement (0,0,0)
+model mechanical thermal active on  ; 激活热膨胀效应
+model solve mechanical ratio 1e-4
+model save 'thermal_stress'
   
 ;开变形开动力
 model config dynamic
@@ -141,7 +141,7 @@ zone face apply quiet-dip range position-z  -0.01 0.01
 
 zone dynamic free-field on
 
-table '1' import 'yacc0.6g.txt'
+table '1' import '0.4g 40hz.txt'
 zone face apply acceleration-x 1.5 table '1' range position-z  -0.01 0.01
 
 
@@ -244,6 +244,16 @@ history export 250 file '250.txt'
 history export 251 file '251.txt'
 history export 260 file '260.txt'
 history export 261 file '261.txt'
+
+
+
+
+
+
+
+
+
+
 
 
 
